@@ -10,6 +10,7 @@
         li { padding: 8px; margin-bottom: 10px; background: #f4f4f4; }
         input { padding: 10px; width: 80%; }
         button { padding: 10px; }
+        .error { color: red; }
     </style>
 </head>
 <body>
@@ -18,6 +19,7 @@
     <form id="form" action="">
         <input id="input" autocomplete="off" /><button>Enviar</button>
     </form>
+    <div id="error" class="error"></div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -25,6 +27,7 @@
         const form = document.getElementById('form');
         const input = document.getElementById('input');
         const messages = document.getElementById('messages');
+        const errorDiv = document.getElementById('error');
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -39,6 +42,14 @@
             item.textContent = msg;
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
+        });
+        
+        // Fase2: Green / Añadir validación de mensaje
+        socket.on('error message', (msg) => {
+            errorDiv.textContent = msg;
+            setTimeout(() => {
+                errorDiv.textContent = '';
+            }, 3000); // Mostrar el mensaje de error durante 3 segundos
         });
     </script>
 </body>

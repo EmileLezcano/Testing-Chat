@@ -45,10 +45,13 @@ describe('Server Tests', () => {
         socket.on('chat message', (msg) => {
             done(new Error('Empty message should not be emitted'));
         });
+        socket.on('error message', (msg) => {
+            expect(msg).toBe('No se pueden enviar mensajes vacíos');
+            done();
+        });
         socket.emit('chat message', '');
-        setTimeout(done, 100); // Espera un breve período para asegurarse de que el mensaje no se emita
     });
-    //-----------------------------------
+    //---------------------------------------------------------------
 
     test('Socket should log disconnect', (done) => {
         const originalLog = console.log;

@@ -16,6 +16,4 @@ routes(app);
 // Configurar eventos de Socket.io
 socketEvents(io);
 
-
-app.listen
 module.exports = { app, server, io };
