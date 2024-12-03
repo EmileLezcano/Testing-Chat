@@ -40,6 +40,16 @@ describe('Server Tests', () => {
         socket.emit('chat message', 'Hello World');
     });
 
+    //Implementación del metodo TDD - Fase1: Red
+    test('Socket should not emit empty chat message', (done) => {
+        socket.on('chat message', (msg) => {
+            done(new Error('Empty message should not be emitted'));
+        });
+        socket.emit('chat message', '');
+        setTimeout(done, 100); // Espera un breve período para asegurarse de que el mensaje no se emita
+    });
+    //-----------------------------------
+
     test('Socket should log disconnect', (done) => {
         const originalLog = console.log;
         console.log = jest.fn();
