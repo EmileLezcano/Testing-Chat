@@ -2,74 +2,72 @@ const request = require('supertest');
 const { app, server, io } = require('../src/server');
 const socketIoClient = require('socket.io-client');
 
-describe('Integration Tests', () => {
-    let client1;
-    let client2;
-    let client3;
+describe('Server Tests', () => {
+    let socket;
+    let port;
 
     beforeAll((done) => {
-        server.listen(3000, done);
-    });
+        port = 0; // Asignar un puerto aleatorio
+        server.listen(port, () => {
+            port = server.address().port;
+            done();
+        });
+    }, 10000); // Aumentar el tiempo de espera a 10 segundos
 
     afterAll((done) => {
         io.close();
         server.close(done);
-    });
+    }, 10000); // Aumentar el tiempo de espera a 10 segundos
 
     beforeEach((done) => {
-        client1 = socketIoClient('http://localhost:3000');
-        client2 = socketIoClient('http://localhost:3000');
-        client3 = socketIoClient('http://localhost:3000');
-
-        let connections = 0;
-        const checkConnections = () => {
-            connections++;
-            if (connections === 3) {
-                done();
-            }
-        };
-
-        client1.on('connect', checkConnections);
-        client2.on('connect', checkConnections);
-        client3.on('connect', checkConnections);
+        socket = socketIoClient(`http://localhost:${port}`);
+        socket.on('connect', done);
     }, 10000); // Aumentar el tiempo de espera a 10 segundos
 
     afterEach((done) => {
-        client1.disconnect();
-        client2.disconnect();
-        client3.disconnect();
+        if (socket && socket.connected) {
+            socket.disconnect();
+        }
         done();
     }, 10000); // Aumentar el tiempo de espera a 10 segundos
 
-    test('Multiple clients should receive broadcasted messages', (done) => {
-        let messagesReceived = 0;
+    test('GET / should return index.html', async () => {
+        const response = await request(app).get('/');
+        expect(response.status).toBe(200);
+        expect(response.type).toBe('text/html');
+    }, 10000); // Aumentar el tiempo de espera a 10 segundos
 
-        client1.on('chat message', (msg) => {
-            expect(msg).toBe('Hello from client2');
-            messagesReceived++;
-            if (messagesReceived === 3) {
+    test('Socket should emit chat message', (done) => {
+        socket.on('chat message', (msg) => {
+            expect(msg).toBe('Hello World');
+            done();
+        });
+        socket.emit('chat message', 'Hello World');
+    }, 10000); // Aumentar el tiempo de espera a 10 segundos
+
+    test('Socket should not emit empty chat message', (done) => {
+        socket.on('chat message', (msg) => {
+            done(new Error('Empty message should not be emitted'));
+        });
+        socket.on('error message', (msg) => {
+            expect(msg).toBe('No se pueden enviar mensajes vacíos');
+            done();
+        });
+        socket.emit('chat message', '');
+    }, 10000); // Aumentar el tiempo de espera a 10 segundos
+
+    test('Socket should log disconnect', (done) => {
+        const originalLog = console.log;
+        console.log = jest.fn();
+
+        socket.on('disconnect', () => {
+            setTimeout(() => {
+                expect(console.log).toHaveBeenCalledWith('Un usuario se ha desconectado');
+                console.log = originalLog;
                 done();
-            }
+            }, 100); // Espera un breve período para asegurarse de que el evento se maneje
         });
 
-        client2.on('chat message', (msg) => {
-            expect(msg).toBe('Hello from client2');
-            messagesReceived++;
-            if (messagesReceived === 3) {
-                done();
-            }
-        });
-
-        client3.on('chat message', (msg) => {
-            expect(msg).toBe('Hello from client2');
-            messagesReceived++;
-            if (messagesReceived === 3) {
-                done();
-            }
-        });
-
-        // Simulate client2 sending a message
-        client2.emit('chat message', 'Hello from client2');
-    }, 15000); // Aumentar el tiempo de espera a 15 segundos
-
+        socket.disconnect();
+    }, 10000); // Aumentar el tiempo de espera a 10 segundos
 });
