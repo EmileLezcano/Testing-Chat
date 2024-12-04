@@ -26,13 +26,13 @@ describe('Server Tests', () => {
         done();
     });
 
-    test('GET / should return index.html', async () => {
+    test('GET / Debería regresar index.html', async () => {
         const response = await request(app).get('/');
         expect(response.status).toBe(200);
         expect(response.type).toBe('text/html');
     });
 
-    test('Socket should emit chat message', (done) => {
+    test('El socket debería emitir un mensaje de chat.', (done) => {
         socket.on('chat message', (msg) => {
             expect(msg).toBe('Hello World');
             done();
@@ -41,7 +41,7 @@ describe('Server Tests', () => {
     });
 
     //Implementación del metodo TDD - Fase1: Red
-    test('Socket should not emit empty chat message', (done) => {
+    test('El socket no debería emitir un mensaje de chat vacío', (done) => {
         socket.on('chat message', (msg) => {
             done(new Error('Empty message should not be emitted'));
         });
@@ -53,7 +53,7 @@ describe('Server Tests', () => {
     });
     //---------------------------------------------------------------
 
-    test('Socket should log disconnect', (done) => {
+    test('Socket debería registrar desconexión', (done) => {
         const originalLog = console.log;
         console.log = jest.fn();
 
@@ -68,3 +68,9 @@ describe('Server Tests', () => {
         socket.disconnect();
     });
 });
+
+// Callback done: Es una función que indica a Jest que la prueba es asíncrona. 
+// Se debe llamar cuando la prueba haya terminado, de lo contrario Jest puede pensar que la prueba sigue ejecutándose y fallará.
+
+// console.log = jest.fn();: Sobrescribe console.log con un mock proporcionado por Jest. 
+//Un mock es una función simulada que nos permite rastrear las llamadas y argumentos sin ejecutar el código real
